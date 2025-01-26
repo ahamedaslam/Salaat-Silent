@@ -5,7 +5,7 @@ namespace NamazSchedulerApp.API.Models
     public class User
     {
         [Key]
-        public Guid UserId { get; set; }
+        public Guid UserId { get; set; } = Guid.NewGuid();
 
         [Required]
         public string Username { get; set; }
@@ -15,5 +15,9 @@ namespace NamazSchedulerApp.API.Models
 
         [Required]
         public string PasswordHash { get; set; }
+
+        public string ResetToken { get; set; }
+
+        public DateTime TokenExpiry { get; set; }
     }
 }

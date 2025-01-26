@@ -17,14 +17,12 @@ namespace NamazSchedulerApp.API.Controllers
     {
         private readonly AppDbContext _context;
         private readonly ILogger<AuthController> _logger;
-        //private readonly GenerateToken _generateToken;
         private readonly GetHashPassword _getHashPassword;
 
         public AuthController(AppDbContext context, ILogger<AuthController> logger, GetHashPassword getHashPassword)
         {
             _context = context;
             _logger = logger;
-            //_generateToken = generateToken;
             _getHashPassword = getHashPassword;
         }
 
@@ -57,7 +55,7 @@ namespace NamazSchedulerApp.API.Controllers
         }
 
         [HttpPost("login")]
-        public IActionResult Login([FromBody] LoginDTO loginRequest)
+        public IActionResult Login([FromBody] LoginRequest loginRequest)
         {
             try
             {
@@ -76,10 +74,6 @@ namespace NamazSchedulerApp.API.Controllers
                     return Unauthorized("Invalid email or password.");
                 }
 
-                // Generate JWT token
-                //var token = _generateToken.CreateJwtToken(user.UserId);  commented for now
-                _logger.LogWarning($"The userID is {user.UserId}");
-
                 _logger.LogInformation($"User logged in successfully: {loginRequest.Email}");
                 return Ok(new { Message = "Login successful." });
             }
@@ -89,5 +83,43 @@ namespace NamazSchedulerApp.API.Controllers
                 return StatusCode(500, "An unexpected error occurred during login.");
             }
         }
+
+        [HttpPost("forgot-password")]
+        public async Task<ActionResult> ForgotPassword([FromBody] ForgotPasswordRequest forgotPasswordRequest)
+        {
+            try
+            {
+                var user = _context.Users.FirstOrDefault(u => u.Email == forgotPasswordRequest.Email);
+                if (user == null)
+                {
+                    _logger.LogWarning($"Forgot password failed: User not found for email {forgotPasswordRequest.Email}");
+                    return NotFound("User with the specified email does not exist.");
+                }
+
+                // Generate a random numeric token (6 digits in this case)
+                var random = new Random();
+                var resetToken = string.Concat(Enumerable.Range(0, 6).Select(_ => random.Next(0, 10).ToString()));
+
+                // Log the reset token (you would typically send this via email)
+                _logger.LogInformation($"Generated reset token for user {user.Email}: {resetToken}");
+
+                // TODO: Implement email sending logic here
+                // Example: SendEmail(user.Email, "Password Reset", $"Your reset token is: {resetToken}");
+
+                // Save the reset token to the database
+                user.ResetToken = resetToken;
+                user.TokenExpiry = DateTime.UtcNow.AddHours(1); // Token valid for 1 hour
+                _context.Users.Update(user);
+                await _context.SaveChangesAsync();
+
+                return Ok("A password reset token has been sent to your email address.");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred during the forgot password process.");
+                return StatusCode(500, "An unexpected error occurred while processing the forgot password request.");
+            }
+        }
+
     }
 }
