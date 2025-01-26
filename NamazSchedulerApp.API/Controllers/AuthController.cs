@@ -17,14 +17,14 @@ namespace NamazSchedulerApp.API.Controllers
     {
         private readonly AppDbContext _context;
         private readonly ILogger<AuthController> _logger;
-        private readonly GenerateToken _generateToken;
+        //private readonly GenerateToken _generateToken;
         private readonly GetHashPassword _getHashPassword;
 
-        public AuthController(AppDbContext context, ILogger<AuthController> logger, GenerateToken generateToken, GetHashPassword getHashPassword)
+        public AuthController(AppDbContext context, ILogger<AuthController> logger, GetHashPassword getHashPassword)
         {
             _context = context;
             _logger = logger;
-            _generateToken = generateToken;
+            //_generateToken = generateToken;
             _getHashPassword = getHashPassword;
         }
 
@@ -77,11 +77,11 @@ namespace NamazSchedulerApp.API.Controllers
                 }
 
                 // Generate JWT token
-                var token = _generateToken.CreateJwtToken(user.UserId);
+                //var token = _generateToken.CreateJwtToken(user.UserId);  commented for now
                 _logger.LogWarning($"The userID is {user.UserId}");
 
                 _logger.LogInformation($"User logged in successfully: {loginRequest.Email}");
-                return Ok(new { Token = token, Message = "Login successful." });
+                return Ok(new { Message = "Login successful." });
             }
             catch (Exception ex)
             {
